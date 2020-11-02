@@ -1,10 +1,11 @@
-const DELAY = 20;
+const DELAY = 1000; //En miliseconde
 
 class Timer {
-  constructor(durationInput, startBtn, pauseBtn, callbacks) {
+  constructor(durationInput, startBtn, pauseBtn, skipBtn, callbacks) {
     this.durationInput = durationInput;
     this.startBtn = startBtn;
     this.pauseBtn = pauseBtn;
+    this.shikBtn = skipBtn;
     if (callbacks) {
       this.onStart = callbacks.onStart;
       this.onTick = callbacks.onTick;
@@ -16,33 +17,41 @@ class Timer {
     this.cycles = [
       {
         name: 'Travail',
-        length: 25,
-        counter: 0,
+        length: '25',
+        index: 0,
       },
       {
-        name: 'Pause Courte',
-        length: 5,
-        counter: 0,
+        name: 'Pause \n Courte',
+        length: '5',
+        index: 1,
       },
       {
-        name: 'Pause Longue',
-        length: 15,
+        name: 'Pause \n Longue',
+        length: '15',
+        index: 2,
       },
     ];
 
     this.startBtn.addEventListener('click', this.start);
     this.pauseBtn.addEventListener('click', this.pause);
+    this.shikBtn.addEventListener('click', this.endCycle);
     this.durationInput.addEventListener('click', this.pause);
     this.durationInput.addEventListener('change', this.reset);
   }
 
   get timeLeft() {
-    return parseFloat(this.durationInput.value); ///RENDU À CHANGER LES MILISECONDE EN MINUTE.SECONDE
+    if (
+      !this.durationInput.value.search(new RegExp(/^\d+((:[0-5])?\d?)?$/)) < 1
+    ) {
+      this.pause();
+      throw new Error('Invalid Format');
+    } else {
+      return this.minutesToSecondes(this.durationInput.value).toString();
+    }
   }
 
   set timeLeft(time) {
-    this.durationInput.value =
-      Math.floor(time / 60) + ((time % 60) / 100).toFixed(2);
+    this.durationInput.value = this.secondesToMinutes(time);
   }
 
   start = () => {
@@ -71,19 +80,23 @@ class Timer {
 
   tick = () => {
     if (this.timeLeft > 0) {
-      this.timeLeft -= DELAY / 1000;
+      this.timeLeft = this.timeLeft - DELAY / 1000;
     } else {
-      this.timeLeft = 0;
-      this.counter++;
-      this.pause();
-      if (this.onComplet) {
-        this.onComplet(this.getCycleName());
-      }
-      this.reset();
+      this.endCycle();
     }
     if (this.onTick) {
       this.onTick(this.timeLeft);
     }
+  };
+
+  endCycle = () => {
+    this.timeLeft = 0;
+    this.counter++;
+    this.pause();
+    if (this.onComplet) {
+      this.onComplet(this.getCycleName());
+    }
+    this.reset();
   };
 
   displayPlayBtn = () => {
@@ -97,24 +110,37 @@ class Timer {
   };
 
   getCycleName = () => {
-    switch (this.counter % 6) {
+    switch (this.counter % 8) {
       case 0:
       case 2:
       case 4:
-        this.timeLeft = this.cycles[0].length;
-        return this.cycles[0].name;
+      case 6:
+        this.timeLeft = this.minutesToSecondes(this.cycles[0].length);
+        return this.cycles[0];
 
       case 1:
       case 3:
-        this.timeLeft = this.cycles[1].length;
-        return this.cycles[1].name;
-
       case 5:
-        this.timeLeft = this.cycles[2].length;
-        return this.cycles[2].name;
+        this.timeLeft = this.minutesToSecondes(this.cycles[1].length);
+        return this.cycles[1];
+
+      case 7:
+        this.timeLeft = this.minutesToSecondes(this.cycles[2].length);
+        return this.cycles[2];
 
       default:
         return 'OMG~BBQ';
     }
+  };
+
+  secondesToMinutes = value => {
+    return `${Math.floor(value / 60)}:${parseFloat((value % 60).toFixed(2))}`;
+  };
+
+  minutesToSecondes = value => {
+    const minutes = value.split(':')[0];
+    const secondes = value.split(':')[1];
+
+    return parseFloat(minutes) * 60 + (secondes ? parseFloat(secondes) : 0);
   };
 }
