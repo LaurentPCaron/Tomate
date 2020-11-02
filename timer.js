@@ -17,17 +17,17 @@ class Timer {
     this.cycles = [
       {
         name: 'Travail',
-        length: '25',
+        length: '25:00',
         index: 0,
       },
       {
         name: 'Pause \n Courte',
-        length: '5',
+        length: '5:00',
         index: 1,
       },
       {
         name: 'Pause \n Longue',
-        length: '15',
+        length: '15:00',
         index: 2,
       },
     ];
@@ -134,7 +134,7 @@ class Timer {
   };
 
   secondesToMinutes = value => {
-    return `${Math.floor(value / 60)}:${parseFloat((value % 60).toFixed(2))}`;
+    return `${Math.floor(value / 60)}:${value % 60 < 10 ? 0 : ''}${value % 60}`;
   };
 
   minutesToSecondes = value => {
