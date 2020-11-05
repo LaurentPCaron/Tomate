@@ -1,4 +1,4 @@
-const DELAY = 1000; //En miliseconde
+const DELAY = 1; //En sec
 
 class Timer {
   constructor(durationInput, startBtn, pauseBtn, skipBtn, callbacks) {
@@ -11,8 +11,14 @@ class Timer {
       this.onTick = callbacks.onTick;
       this.onComplet = callbacks.onComplet;
       this.onReset = callbacks.onReset;
+      this.onError = callbacks.onError;
     }
 
+    this.timer = new easytimer.Timer();
+    this.timer.addEventListener('secondsUpdated', e => {
+      this.tick();
+    });
+    this.haveError = false;
     this.counter = 0;
     this.cycles = [
       {
@@ -21,12 +27,12 @@ class Timer {
         index: 0,
       },
       {
-        name: 'Pause \n Courte',
+        name: 'Pause <br/> Courte',
         length: '5:00',
         index: 1,
       },
       {
-        name: 'Pause \n Longue',
+        name: 'Pause <br/> Longue',
         length: '15:00',
         index: 2,
       },
@@ -40,14 +46,7 @@ class Timer {
   }
 
   get timeLeft() {
-    if (
-      !this.durationInput.value.search(new RegExp(/^\d+((:[0-5])?\d?)?$/)) < 1
-    ) {
-      this.pause();
-      throw new Error('Invalid Format');
-    } else {
-      return this.minutesToSecondes(this.durationInput.value).toString();
-    }
+    return this.minutesToSecondes(this.durationInput.value).toString();
   }
 
   set timeLeft(time) {
@@ -55,32 +54,44 @@ class Timer {
   }
 
   start = () => {
-    this.displayPauseBtn();
-    if (this.onStart) {
-      this.onStart(this.timeLeft);
-    }
-    if (!this.interval) {
-      this.tick();
-      this.interval = setInterval(this.tick, DELAY);
+    if (!this.haveError) {
+      this.displayPauseBtn();
+      if (this.onStart) {
+        this.onStart(this.timeLeft);
+      }
+      if (!this.timer.isRunning()) {
+        this.timer.start();
+      }
     }
   };
 
   pause = () => {
     this.displayPlayBtn();
-    clearInterval(this.interval);
-    this.interval = null;
+    this.timer.pause();
   };
 
   reset = () => {
+    const input = this.durationInput.value;
+    this.haveError = false;
+
+    try {
+      if (!input.search(new RegExp(/^\d+((:[0-5])?\d?)?$/)) < 1) {
+        throw new Error('Invalid Format. Use mm:ss');
+      }
+    } catch (e) {
+      this.haveError = true;
+      this.onError(e);
+    }
+
     this.pause();
-    if (this.onReset) {
+    if (this.onReset && !this.haveError) {
       this.onReset();
     }
   };
 
   tick = () => {
     if (this.timeLeft > 0) {
-      this.timeLeft = this.timeLeft - DELAY / 1000;
+      this.timeLeft = this.timeLeft - DELAY;
     } else {
       this.endCycle();
     }

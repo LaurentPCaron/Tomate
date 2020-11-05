@@ -17,6 +17,11 @@ body {
     'Droid Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
+.timer {
+  display: flex;
+  justify-content: center;
+}
+
 .timer input {
   display: block;
   border: none;
@@ -56,5 +61,17 @@ body {
 }
 
 #cycle_name {
-  font-size: 60px;
+  text-align: center;
+  margin: 0;
+  font-size: 45px;
+}
+
+#error_message {
+  display: none;
+  color: red;
+  margin: 0;
+}
+
+.error {
+  color: red;
 }
